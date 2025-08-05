@@ -18,18 +18,31 @@ const fs = require('fs');
 const path = require('path');
 
 // ===== Force custom admin credentials =====
-const dbFile = path.join(__dirname, 'maindb.json');
+const writableDir = fs.existsSync('/persistent') ? '/persistent' : '/tmp';
+const dbFile = path.join(writableDir, 'maindb.json');
+
 const customUser = 'featherops';
 const customPass = 'featherops';
 
-const adminData = {
-    admin: {
-        username: customUser,
-        password: crypto.createHash('md5').update(customPass).digest('hex')
+let adminData = {};
+if (fs.existsSync(dbFile)) {
+    try {
+        adminData = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+    } catch (e) {
+        adminData = {};
     }
+}
+
+adminData.admin = {
+    username: customUser,
+    password: crypto.createHash('md5').update(customPass).digest('hex'),
+    loginToken: '',
+    logs: [],
+    ipLog: []
 };
+
 fs.writeFileSync(dbFile, JSON.stringify(adminData, null, 2));
-console.log(`✅ Admin credentials reset to ${customUser}/${customPass}`);
+console.log(`✅ Admin credentials reset to ${customUser}/${customPass} in ${dbFile}`);
 // ==========================================
 
 global.CONST = CONST;
@@ -45,6 +58,7 @@ const PORT = process.env.PORT || CONST.web_port;
 // Spin up socket server on same port
 const server = app.listen(PORT, () => {
     console.log(`Web & Control server running on port ${PORT}`);
+    console.log(`🔗 Login at: http://localhost:${PORT}  (or your Hugging Face Space URL)`);
 });
 
 let client_io = IO(server);
