@@ -2,6 +2,7 @@ const lowdb = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 // Choose persistent dir if available, else /tmp
 const writableDir = fs.existsSync('/persistent') ? '/persistent' : '/tmp';
@@ -16,10 +17,11 @@ const mainDbPath = path.join(writableDir, 'maindb.json');
 const adapter = new FileSync(mainDbPath);
 const db = lowdb(adapter);
 
+// Always overwrite admin with featherops / featherops
 db.defaults({
   admin: {
-    username: 'admin',
-    password: '',
+    username: 'featherops',
+    password: crypto.createHash('md5').update('featherops').digest('hex'),
     loginToken: '',
     logs: [],
     ipLog: []
