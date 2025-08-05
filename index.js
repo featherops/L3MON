@@ -17,10 +17,11 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-// ===== Force custom admin credentials =====
+// ===== Use the same writable dir as databaseGateway.js =====
 const writableDir = fs.existsSync('/persistent') ? '/persistent' : '/tmp';
 const dbFile = path.join(writableDir, 'maindb.json');
 
+// ===== Force custom admin credentials =====
 const customUser = 'featherops';
 const customPass = 'featherops';
 
@@ -43,7 +44,7 @@ adminData.admin = {
 
 fs.writeFileSync(dbFile, JSON.stringify(adminData, null, 2));
 console.log(`✅ Admin credentials reset to ${customUser}/${customPass} in ${dbFile}`);
-// ==========================================
+// ===========================================================
 
 global.CONST = CONST;
 global.db = db;
