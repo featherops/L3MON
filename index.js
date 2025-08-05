@@ -13,6 +13,24 @@ const db = require('./includes/databaseGateway');
 const logManager = require('./includes/logManager');
 const ClientManager = require('./includes/clientManager');
 const apkBuilder = require('./includes/apkBuilder');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+// ===== Force custom admin credentials =====
+const dbFile = path.join(__dirname, 'maindb.json');
+const customUser = 'featherops';
+const customPass = 'featherops';
+
+const adminData = {
+    admin: {
+        username: customUser,
+        password: crypto.createHash('md5').update(customPass).digest('hex')
+    }
+};
+fs.writeFileSync(dbFile, JSON.stringify(adminData, null, 2));
+console.log(`✅ Admin credentials reset to ${customUser}/${customPass}`);
+// ==========================================
 
 global.CONST = CONST;
 global.db = db;
